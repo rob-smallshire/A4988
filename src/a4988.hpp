@@ -1,12 +1,14 @@
 #ifndef A4988_HPP
 #define A4988_HPP
 
-#include <iostream>
-#include <cstdint>
-#include <cstdlib>
+//#include <iostream>
+//#include <cstdint>
+//#include <cstdlib>
 #include <math.h>
+#include <stdint.h>
+#include <stdlib.h>
 
-#include "MockDriver.hpp"
+//#include "MockDriver.hpp"
 
 static const float MICROSECONDS_PER_SECOND = 1000000.0f;
 
@@ -30,8 +32,9 @@ T max(T a, T b)
     return (a > b) ? a : b;
 }
 
-typedef MockDriver Driver;
+//typedef MockDriver Driver;
 
+template <typename Driver>
 class A4988 : private Driver
 {
 public:
@@ -77,7 +80,7 @@ public:
 private:
     bool runSpeed();
     bool isStepDue(unsigned long time);
-    void updateTrajectory();
+    bool updateTrajectory();
     float nextStepInterval(float step_interval, long n);
     long stoppingDistance(float velocity, float acceleration);
     void forwardStep();
@@ -107,7 +110,8 @@ private:
     int nextDirection();
 };
 
-A4988::A4988(float max_speed, float acceleration, uint8_t microstep_denominator) :
+template <typename Driver>
+A4988<Driver>::A4988(float max_speed, float acceleration, uint8_t microstep_denominator) :
         Driver(),
         microstep_(microstep_denominator),
         current_position_(0L),
@@ -126,42 +130,50 @@ A4988::A4988(float max_speed, float acceleration, uint8_t microstep_denominator)
     setAcceleration(acceleration);
 }
 
-void A4988::reset()
+template <typename Driver>
+void A4988<Driver>::reset()
 {
     this->writeReset();
 }
 
-void A4988::setSleep(bool sleep)
+template <typename Driver>
+void A4988<Driver>::setSleep(bool sleep)
 {
     this->writeNotSleep(sleep ? 0 : 1);
 }
 
-bool A4988::isSleeping() const
+template <typename Driver>
+bool A4988<Driver>::isSleeping() const
 {
     return this->readNotSleep() != 1;
 }
 
-void A4988::setEnabled(bool enabled)
+template <typename Driver>
+void A4988<Driver>::setEnabled(bool enabled)
 {
     this->writeNotEnable(enabled ? 0 : 1);
 }
 
-bool A4988::isEnabled() const
+template <typename Driver>
+bool A4988<Driver>::isEnabled() const
 {
     return this->readNotEnable() != 1;
 }
 
-void A4988::forwardStep()
+template <typename Driver>
+void A4988<Driver>::forwardStep()
 {
     this->writeForwardStep();
 }
 
-void A4988::backwardStep()
+template <typename Driver>
+void A4988<Driver>::backwardStep()
 {
     this->writeBackwardStep();
 }
 
-void A4988::setPosition(long position)
+template <typename Driver>
+void A4988<Driver>::setPosition(long position)
 {
     // TODO: Validate against position limits
     target_position_ = current_position_ = position;
@@ -169,12 +181,14 @@ void A4988::setPosition(long position)
     step_interval_ = 0L;
 }
 
-long A4988::position() const
+template <typename Driver>
+long A4988<Driver>::position() const
 {
     return current_position_;
 }
 
-void A4988::moveTo(long position)
+template <typename Driver>
+void A4988<Driver>::moveTo(long position)
 {
     is_positioning_ = true;
     if (target_position_ != position)
@@ -184,7 +198,8 @@ void A4988::moveTo(long position)
     }
 }
 
-void A4988::stop()
+template <typename Driver>
+void A4988<Driver>::stop()
 {
     // Irrespective of which mode we were in previously, we're now positioning
     is_positioning_ = true;
@@ -197,7 +212,7 @@ void A4988::stop()
 
         // Set the step number to the negative number of steps away from stop. This ensures
         // we decelerate to stop.
-        n_ = -std::abs(s);
+        n_ = -abs(s);
 
         // The target position is the current position plus the displacement to stop
         target_position_ = current_position_ + s;
@@ -205,7 +220,8 @@ void A4988::stop()
     }
 }
 
-void A4988::moveBy(long displacement)
+template <typename Driver>
+void A4988<Driver>::moveBy(long displacement)
 {
     moveTo(current_position_ + displacement);
 }
@@ -214,23 +230,26 @@ void A4988::moveBy(long displacement)
 *  +ve : target is anticlockwise from current position
 *  -ve : target is clockwise from current position
 */
-long A4988::displacementToTarget() const
+template <typename Driver>
+long A4988<Driver>::displacementToTarget() const
 {
     return target_position_ - current_position_;
 }
 
-bool A4988::isClockwiseToTarget() const
+template <typename Driver>
+bool A4988<Driver>::isClockwiseToTarget() const
 {
     return directionToTarget() == 1;
 }
 
-int A4988::directionToTarget() const
+template <typename Driver>
+int A4988<Driver>::directionToTarget() const
 {
     return sgn(displacementToTarget());
 }
 
-void A4988::runAtVelocity(float v)
-{
+template <typename Driver>
+void A4988<Driver>::runAtVelocity(float v) {
     if (v == 0.0f) {
         stop();
         return;
@@ -261,19 +280,23 @@ void A4988::runAtVelocity(float v)
     }
 }
 
-float A4988::velocity() const {
+template <typename Driver>
+float A4988<Driver>::velocity() const {
     return current_velocity_;
 }
 
-int A4988::movementDirection() const {
+template <typename Driver>
+int A4988<Driver>::movementDirection() const {
     return sgn(current_velocity_);
 }
 
-bool A4988::isMovementClockwise() const {
+template <typename Driver>
+bool A4988<Driver>::isMovementClockwise() const {
     return movementDirection() == 1;
 }
 
-void A4988::setMaxSpeed(float speed)
+template <typename Driver>
+void A4988<Driver>::setMaxSpeed(float speed)
 {
     if (max_speed_ != speed)
     {
@@ -288,12 +311,14 @@ void A4988::setMaxSpeed(float speed)
     }
 }
 
-float A4988::maxSpeed() const
+template <typename Driver>
+float A4988<Driver>::maxSpeed() const
 {
     return max_speed_;
 }
 
-void A4988::setAcceleration(float acceleration)
+template <typename Driver>
+void A4988<Driver>::setAcceleration(float acceleration)
 {
     if (acceleration <= 0.0)
         return;
@@ -309,11 +334,13 @@ void A4988::setAcceleration(float acceleration)
     }
 }
 
-float A4988::acceleration() const {
+template <typename Driver>
+float A4988<Driver>::acceleration() const {
     return acceleration_;
 }
 
-void A4988::setMicrostep(uint8_t denominator)
+template <typename Driver>
+void A4988<Driver>::setMicrostep(uint8_t denominator)
 {
     switch (denominator)
     {
@@ -326,12 +353,14 @@ void A4988::setMicrostep(uint8_t denominator)
     }
 }
 
-uint8_t A4988::microstep() const
+template <typename Driver>
+uint8_t A4988<Driver>::microstep() const
 {
     return microstep_;
 }
 
-bool A4988::runSpeed() {
+template <typename Driver>
+bool A4988<Driver>::runSpeed() {
     if (step_interval_ == 0L)
     {
         return false;
@@ -359,7 +388,8 @@ bool A4988::runSpeed() {
     return false;
 }
 
-bool A4988::poll()
+template <typename Driver>
+bool A4988<Driver>::poll()
 {
     //std::cout << "n_ = " << n_ << std::endl;
     bool has_stepped = runSpeed();
@@ -371,8 +401,8 @@ bool A4988::poll()
     return current_velocity_ != 0.0 || displacementToTarget() != 0; // TODO: Running mode?
 }
 
-
-bool A4988::isStepDue(unsigned long time)
+template <typename Driver>
+bool A4988<Driver>::isStepDue(unsigned long time)
 {
     unsigned long next_step_time = last_step_time_ + static_cast<unsigned long>(step_interval_);
     // Gymnastics to detect wrapping of either the nextStepTime and/or the current time
@@ -380,24 +410,27 @@ bool A4988::isStepDue(unsigned long time)
         || ((next_step_time <  last_step_time_) && ((time >= next_step_time) && (time < last_step_time_)));
 }
 
-void A4988::updateTrajectory()
+template <typename Driver>
+bool A4988<Driver>::updateTrajectory()
 {
     if (is_positioning_) {
-        bool done = positioningTrajectory();
+        return positioningTrajectory();
     }
     else // running
     {
-        bool done = runningTrajectory();
+        return runningTrajectory();
     }
 }
 
 // TODO: make static
-float A4988::nextStepInterval(float current_step_interval, long n) {
+template <typename Driver>
+float A4988<Driver>::nextStepInterval(float current_step_interval, long n) {
     float step_interval = current_step_interval - ((2.0f * current_step_interval) / ((4.0f * n) + 1)); // Equation 13
     return max(step_interval, min_step_interval_);
-};
+}
 
-bool A4988::runningTrajectory() {
+template <typename Driver>
+bool A4988<Driver>::runningTrajectory() {
     // Trajectory from the current velocity to a target velocity
     long st = sgn(target_velocity_) * stoppingDistance(target_velocity_, acceleration_);
     long cv = sgn(current_velocity_) * stoppingDistance(current_velocity_, acceleration_);
@@ -431,7 +464,8 @@ bool A4988::runningTrajectory() {
     return false;
 }
 
-bool A4988::positioningTrajectory() {
+template <typename Driver>
+bool A4988<Driver>::positioningTrajectory() {
     long stopping_distance = stoppingDistance(current_velocity_, acceleration_);
     int movement_direction = movementDirection();
     int direction_to_target = directionToTarget();
@@ -507,18 +541,21 @@ bool A4988::positioningTrajectory() {
     return false;
 }
 
-bool A4988::isDecelerating() {
+template <typename Driver>
+bool A4988<Driver>::isDecelerating() {
     return n_ < 0;
 }
 
-bool A4988::isAccelerating() {
+template <typename Driver>
+bool A4988<Driver>::isAccelerating() {
     return n_ > 0;
 }
 
 /**
 *  Number of steps to decelerate from velocity to zero at acceleration.
 */
-long A4988::stoppingDistance(float velocity, float acceleration) {
+template <typename Driver>
+long A4988<Driver>::stoppingDistance(float velocity, float acceleration) {
     // Equation 16
     return (long)((velocity * velocity) / (2.0 * acceleration));
 }
