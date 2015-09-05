@@ -1,8 +1,11 @@
 #include <stdio.h>
 
+#include <avr/interrupt.h>
+
 extern "C" {
 #include "stream.h"
 #include "uart.h"
+#include "elapsed/elapsed.h"
 }
 
 #include "a4988.hpp"
@@ -10,12 +13,16 @@ extern "C" {
 
 
 int main() {
+    init_millis();
+
+    sei();
+
     stdin = stdout = get_uart0_stream();
 
     // USB Serial 0
-    uart0_init(UART_BAUD_SELECT(9600, F_CPU));
+    uart0_init(UART_BAUD_SELECT(115200, F_CPU));
 
-    A4988<MockDriver> stepper(10.0f, 2.0f);
+    A4988<MockDriver> stepper(10.0f, 2.0f, 16, MILLISECONDS_PER_SECOND);
     //cout << "stepper.position()     = " << stepper.position() << endl;
     //cout << "stepper.acceleration() = " << stepper.acceleration() << endl;
     stepper.moveTo(100);
@@ -40,4 +47,3 @@ int main() {
 
     return 0;
 }
-

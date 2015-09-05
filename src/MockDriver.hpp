@@ -1,8 +1,11 @@
 #ifndef A4988_ARDUINO_DRIVER_HPP
 #define A4988_ARDUINO_DRIVER_HPP
 
-//#include <chrono>
-//#include <iostream>
+extern "C" {
+#include "stream.h"
+#include "uart.h"
+#include "elapsed/elapsed.h"
+}
 
 class MockDriver
 {
@@ -11,12 +14,12 @@ public:
             sleeping(false),
             enabled(true)
     {
-        //std::cout << "MockDriver()" << std::endl;
+        printf("MockDriver()\n");
     }
 
     void writeReset()
     {
-        //std::cout << "writeReset() at " << clock() << " us" << std::endl;
+        printf("writeReset() at %lu ms\n", clock());
         sleeping = false;
         enabled = true;
     }
@@ -24,7 +27,7 @@ public:
     void writeNotSleep(uint8_t state)
     {
         sleeping = (state == 0);
-        //std::cout << "writeNotSleep(" << state << ") at " << clock() << " us" << std::endl;
+        printf("writeNotSleep(%d) at %lu ms\n", state, clock());
     }
 
     uint8_t readNotSleep() const
@@ -35,7 +38,7 @@ public:
     void writeNotEnable(uint8_t state)
     {
         enabled = (state == 0);
-        //std::cout << "writeNotEnable(" << state << ") at " << clock() << " us" << std::endl;
+        printf("writeNotEnable(%d) at %lu ms\n", state, clock());
     }
 
     uint8_t readNotEnable() const
@@ -45,21 +48,17 @@ public:
 
     void writeForwardStep()
     {
-        //std::cout << "writeForwardStep() at " << clock() << " us" << std::endl;
+        printf("writeForwardStep() at %lu ms\n", clock());
     }
 
     void writeBackwardStep()
     {
-        //std::cout << "writeBackwardStep() at " << clock() << " us" << std::endl;
+        printf("writeBackwardStep() at %lu ms\n", clock());
     }
 
     unsigned long int clock() const
     {
-        //auto n = std::chrono::high_resolution_clock::now();
-        //auto us = std::chrono::time_point_cast<std::chrono::microseconds>(n);
-        //auto ticks = us.time_since_epoch().count();
-        //return static_cast<unsigned long>(ticks);
-        return 1U;
+        return millis();
     }
 
 private:

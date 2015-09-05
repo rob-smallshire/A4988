@@ -10,6 +10,7 @@
 
 //#include "MockDriver.hpp"
 
+static const float MILLISECONDS_PER_SECOND = 1000.0f;
 static const float MICROSECONDS_PER_SECOND = 1000000.0f;
 
 template <typename T>
@@ -38,7 +39,10 @@ template <typename Driver>
 class A4988 : private Driver
 {
 public:
-    A4988(float max_speed=1.0f, float acceleration=0.0f, uint8_t microstep_denominator=16);
+    A4988(float max_speed=1.0f,
+          float acceleration=0.0f,
+          uint8_t microstep_denominator=16,
+          float clock_ticks_per_second=MICROSECONDS_PER_SECOND);
 
     void reset();
 
@@ -99,6 +103,7 @@ private:
     unsigned long last_step_time_;
     bool is_positioning_;
     long n_;
+    float clock_ticks_per_second_;
 
     bool positioningTrajectory();
     bool runningTrajectory();
@@ -111,7 +116,7 @@ private:
 };
 
 template <typename Driver>
-A4988<Driver>::A4988(float max_speed, float acceleration, uint8_t microstep_denominator) :
+A4988<Driver>::A4988(float max_speed, float acceleration, uint8_t microstep_denominator, float clock_ticks_per_second) :
         Driver(),
         microstep_(microstep_denominator),
         current_position_(0L),
@@ -121,7 +126,7 @@ A4988<Driver>::A4988(float max_speed, float acceleration, uint8_t microstep_deno
         max_speed_(max_speed),
         acceleration_(0.0f),  // Must be different to the value we use below
         step_interval_(0.0f),
-        min_step_interval_(MICROSECONDS_PER_SECOND / max_speed_),
+        min_step_interval_(clock_ticks_per_second / max_speed_),
         initial_step_interval_(0.0f),
         last_step_time_(0UL),
         is_positioning_(true),
@@ -301,7 +306,7 @@ void A4988<Driver>::setMaxSpeed(float speed)
     if (max_speed_ != speed)
     {
         max_speed_ = speed;
-        min_step_interval_ = MICROSECONDS_PER_SECOND / speed;
+        min_step_interval_ = clock_ticks_per_second_ / speed;
         // Recompute _n from current speed and adjust speed if accelerating or cruising
         if (n_ != 0)
         {
@@ -328,7 +333,7 @@ void A4988<Driver>::setAcceleration(float acceleration)
         // Recompute n_ per Equation 17
         n_ = static_cast<long>(n_ * (acceleration_ / acceleration));
         // New c0 per Equation 7
-        initial_step_interval_ = float(sqrt(1.0 / acceleration) * MICROSECONDS_PER_SECOND);
+        initial_step_interval_ = float(sqrt(1.0 / acceleration) * clock_ticks_per_second_);
         acceleration_ = acceleration;
         updateTrajectory();
     }
@@ -437,7 +442,7 @@ bool A4988<Driver>::runningTrajectory() {
 
     if (st == cv)
     {
-        step_interval_ = MICROSECONDS_PER_SECOND / fabsf(target_velocity_);
+        step_interval_ = clock_ticks_per_second_ / fabsf(target_velocity_);
         current_velocity_ = target_velocity_;
         n_ = 0;
         return true;
@@ -457,7 +462,7 @@ bool A4988<Driver>::runningTrajectory() {
         step_interval_ = nextStepInterval(step_interval_, n_);
         dir = (current_velocity_ == 0.0f) ? sgn(target_velocity_) : movementDirection();
     }
-    current_velocity_ = dir * MICROSECONDS_PER_SECOND / step_interval_;
+    current_velocity_ = dir * clock_ticks_per_second_ / step_interval_;
 
     ++n_;
 
@@ -534,7 +539,7 @@ bool A4988<Driver>::positioningTrajectory() {
         step_interval_ = nextStepInterval(step_interval_, n_);
         dir = (current_velocity_ == 0.0f) ? directionToTarget() : movementDirection();
     }
-    current_velocity_ = dir * MICROSECONDS_PER_SECOND / step_interval_;
+    current_velocity_ = dir * clock_ticks_per_second_ / step_interval_;
 
     ++n_;
 
