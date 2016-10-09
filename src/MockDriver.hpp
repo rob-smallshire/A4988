@@ -1,5 +1,5 @@
-#ifndef A4988_ARDUINO_DRIVER_HPP
-#define A4988_ARDUINO_DRIVER_HPP
+#ifndef A4988_MOCK_DRIVER_HPP
+#define A4988_MOCK_DRIVER_HPP
 
 extern "C" {
 #include "stream.h"

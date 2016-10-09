@@ -8,7 +8,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-//#include "MockDriver.hpp"
+#ifdef DEBUG_A4988
+#include <stdio.h>
+#endif
+
 
 static const float MILLISECONDS_PER_SECOND = 1000.0f;
 static const float MICROSECONDS_PER_SECOND = 1000000.0f;
@@ -130,7 +133,8 @@ A4988<Driver>::A4988(float max_speed, float acceleration, uint8_t microstep_deno
         initial_step_interval_(0.0f),
         last_step_time_(0UL),
         is_positioning_(true),
-        n_(0L)
+        n_(0L),
+        clock_ticks_per_second_(clock_ticks_per_second)
 {
     setAcceleration(acceleration);
 }
@@ -396,12 +400,12 @@ bool A4988<Driver>::runSpeed() {
 template <typename Driver>
 bool A4988<Driver>::poll()
 {
-    //std::cout << "n_ = " << n_ << std::endl;
     bool has_stepped = runSpeed();
-
+    //printf("poll() : has_stepped = %d\n", has_stepped);
     if (has_stepped)
     {
         updateTrajectory();
+        //printf("stepper.position() = %ld, stepper.velocity() = %f\n", this->position(), (double)this->velocity());
     }
     return current_velocity_ != 0.0 || displacementToTarget() != 0; // TODO: Running mode?
 }
@@ -418,6 +422,7 @@ bool A4988<Driver>::isStepDue(unsigned long time)
 template <typename Driver>
 bool A4988<Driver>::updateTrajectory()
 {
+    //printf("updateTrajectory() : is_positioning_ = %d\n", is_positioning_);
     if (is_positioning_) {
         return positioningTrajectory();
     }
@@ -474,18 +479,19 @@ bool A4988<Driver>::positioningTrajectory() {
     long stopping_distance = stoppingDistance(current_velocity_, acceleration_);
     int movement_direction = movementDirection();
     int direction_to_target = directionToTarget();
-
+    //printf("stopping_distance = %ld\n", stopping_distance);
+    //printf("movement_direction = %d\n", movement_direction);
+    //printf("direction_to_target = %d\n", direction_to_target);
     if (direction_to_target == 0 && stopping_distance <= 1)
     {
         // We are at the target and it's time to stop
         step_interval_ = 0;
         current_velocity_ = 0.0f;
         n_ = 0;
+        //printf("positioningTrajectory() : n_ = %ld\n", n_);
         return true;
     }
     else if (movement_direction == direction_to_target) {
-
-
         // n_ is a step number on a ramp from zero
         // Note: n_ is -ve : deceleration
         //       n_ is   0 : start/stop
@@ -526,6 +532,8 @@ bool A4988<Driver>::positioningTrajectory() {
         n_ = -stopping_distance;
     }
 
+    //printf("n_ = %ld\n", n_);
+
     int dir;
     if (n_ == 0)
     {
@@ -540,7 +548,10 @@ bool A4988<Driver>::positioningTrajectory() {
         dir = (current_velocity_ == 0.0f) ? directionToTarget() : movementDirection();
     }
     current_velocity_ = dir * clock_ticks_per_second_ / step_interval_;
-
+    //printf("clock_ticks_per_second_ = %f\n", (double)clock_ticks_per_second_);
+    //printf("step_interval_ = %f\n", (double)step_interval_);
+    //printf("dir = %d\n", dir);
+    //printf("current_velocity_ = %f\n", (double)current_velocity_);
     ++n_;
 
     return false;

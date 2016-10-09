@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="CPP_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/CMakeLists.txt" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/generic-gcc-avr.cmake" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/CMakeLists.txt" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/elapsed/CMakeLists.txt" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/elapsed/elapsed.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/elapsed/elapsed.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/main.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/stream.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/stream.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/uart.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/uart.h" isTestSource="false" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module-library">
+      <library name="Header Search Paths">
+        <CLASSES>
+          <root url="file:///usr/lib/avr/include" />
+          <root url="file:///usr/lib/gcc/avr/4.8.2/include" />
+          <root url="file:///usr/lib/gcc/avr/4.8.2/include-fixed" />
+        </CLASSES>
+        <SOURCES>
+          <root url="file:///usr/lib/avr/include" />
+          <root url="file:///usr/lib/gcc/avr/4.8.2/include" />
+          <root url="file:///usr/lib/gcc/avr/4.8.2/include-fixed" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+  </component>
+</module>
